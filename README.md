@@ -20,9 +20,17 @@ DBus / les apps Wayland-only via un wrapper Linux embarqué.
 
 ## 🌐 Detailed Documentation / Documentation Détaillée
 
-- [English](docs/README.en.md)
-- [Français](docs/README.fr.md)
+- 🇺🇸 [English Documentation](./docs/README.en.md)
+- 🇫🇷 [Documentation Française](./docs/README.fr.md)
 
+---
+
+## 🖥️ Advanced Guides / Guides avancés
+
+**WSLD + GWSL Setup**
+- 🇺🇸 [English](./docs/WSLD_SETUP.en.md)
+- 🇫🇷 [Français](./docs/WSLD_SETUP.fr.md)
+  
 ---
 
 ## ⚡ Quick start / Démarrage rapide
