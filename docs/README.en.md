@@ -49,6 +49,9 @@ predictable X11 stack with explicit control over what goes where.
   **[VcXsrv](https://sourceforge.net/projects/vcxsrv/)** (launch with
   "Disable access control" enabled).
 
+> [!IMPORTANT]
+> To bypass WSLg, you must disable it globally by adding `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
+
 ### 2. Clone and install
 
 ```powershell
