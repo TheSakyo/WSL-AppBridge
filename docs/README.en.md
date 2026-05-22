@@ -45,7 +45,7 @@ predictable X11 stack with explicit control over what goes where.
 - Windows 10 (1809 or later) or Windows 11
 - WSL2 enabled with at least one distro installed (`wsl --install -d Debian`)
 - An X11 server running on Windows. Recommended: **[GWSL](https://opticos.github.io/gwsl/)**
-  from the Microsoft Store (free, sets up automatically). Alternative:
+  from the Microsoft Store (sets up automatically). Alternative:
   **[VcXsrv](https://sourceforge.net/projects/vcxsrv/)** (launch with
   "Disable access control" enabled).
 
