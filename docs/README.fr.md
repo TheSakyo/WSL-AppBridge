@@ -84,7 +84,7 @@ L'installeur loggue la commande exacte si un de ces paquets manque.
 ## Configuration
 
 > [!IMPORTANT]
-> Pour contourner WSLg, vous devez le désactiver globalement en ajoutant guiApplications=false sous la section [wsl2] dans votre fichier %USERPROFILE%\\.wslconfig.
+> Pour contourner WSLg, vous devez le désactiver globalement en ajoutant `guiApplications=false` sous la section `[wsl2]` dans votre fichier `%USERPROFILE%\.wslconfig`.
 
 Tous les paramètres acceptés par `Install.ps1` :
 
