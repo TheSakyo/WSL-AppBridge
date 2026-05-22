@@ -104,6 +104,7 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :
 
 ## 🛠️ Requirements / Prérequis
 
+### English
 - Windows 10 (1809+) or Windows 11
 - WSL2 with at least one Linux distribution
 - X11 server on Windows: [GWSL](https://opticos.github.io/gwsl/) (recommended) or [VcXsrv](https://sourceforge.net/projects/vcxsrv/)
@@ -112,6 +113,16 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :
   - `imagemagick` — XPM icon fallback
   - `dbus-user-session` — notifications and tray icons
 - Optional for audio: [PulseAudio for Windows](https://www.freedesktop.org/wiki/Software/PulseAudio/Ports/Windows/)
+
+### Français
+- Windows 10 (1809+) ou Windows 11
+- WSL2 avec au moins une distribution Linux installée
+- Serveur X11 sur Windows : [GWSL](https://opticos.github.io/gwsl/) (recommandé) ou [VcXsrv](https://sourceforge.net/projects/vcxsrv/)
+- Optionnel pour toutes les fonctionnalités (installables via apt-get dans WSL) :
+  - `librsvg2-bin` — Rastérisation des icônes SVG
+  - `imagemagick` — Fallback pour les icônes XPM
+  - `dbus-user-session` — Notifications et icônes de la zone de notification (systray)
+- Optionnel pour le son : [PulseAudio pour Windows](https://www.freedesktop.org/wiki/Software/PulseAudio/Ports/Windows/)
 
 ---
 
