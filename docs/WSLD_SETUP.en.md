@@ -128,13 +128,13 @@ cargo install --locked --git https://github.com/nbdd0121/wsld wsldhost
 ### Auto-start configuration
 
 1. Go to:
-C:\Users\<your-user>\.cargo\bin
+`C:\Users\<your-user>\.cargo\bin`
 
 2. Create a shortcut for:
-wsldhost.exe
+`wsldhost.exe`
 
 3. Place it in:
-C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup
+`C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup`
 
 ---
 
