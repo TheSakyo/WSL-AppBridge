@@ -28,7 +28,7 @@ DBus / les apps Wayland-only via un wrapper Linux embarqué.
 ## ⚡ Quick start / Démarrage rapide
 
 ```powershell
-git clone https://github.com/<your-username>/WSL-AppBridge.git
+git clone https://github.com/TheSakyo/WSL-AppBridge.git
 cd WSL-AppBridge
 powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :0
 ```
