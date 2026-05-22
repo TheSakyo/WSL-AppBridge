@@ -52,7 +52,7 @@ predictable X11 stack with explicit control over what goes where.
 ### 2. Clone and install
 
 ```powershell
-git clone https://github.com/<your-username>/WSL-AppBridge.git
+git clone https://github.com/TheSakyo/WSL-AppBridge.git
 cd WSL-AppBridge
 powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :0
 ```
