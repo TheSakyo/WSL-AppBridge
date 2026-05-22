@@ -1,0 +1,51 @@
+# =============================================================================
+#  WSL-AppBridge — .gitignore
+# =============================================================================
+
+# ---- Runtime state ---------------------------------------------------------
+# Everything Sync/Watcher writes lives under %LOCALAPPDATA% on the user's
+# machine, but if anyone ever copies their settings/state next to the repo
+# for testing, keep them out of commits.
+state.json
+sync.log
+watcher.log
+install.log
+*.lnk
+icons/
+
+# Per-machine config that Install.ps1 generates at runtime.
+config/settings*.json
+instances/
+
+# ---- Windows ---------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.tmp
+*.bak
+
+# ---- PowerShell ------------------------------------------------------------
+*.ps1xml.bak
+PSScriptAnalyzerSettings.user.psd1
+
+# ---- IDE / editors ---------------------------------------------------------
+.vscode/
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- macOS / Linux (cross-platform contributors) ---------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ---- Archive / dist outputs ------------------------------------------------
+*.zip
+dist/
+build/
+out/
