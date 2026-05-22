@@ -111,7 +111,7 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :
 
 ---
 
-> [!IMPORTANT]
+> [**IMPORTANT**]
 
 > **EN:** To bypass WSLg, you must disable it globally by adding `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
 > 
