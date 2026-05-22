@@ -112,4 +112,4 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :
 
 ## 📜 License / Licence
 
-MIT — see [LICENSE](LICENSE).
+MIT — [LICENSE](LICENSE).
