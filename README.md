@@ -108,6 +108,15 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :
   - `dbus-user-session` — notifications and tray icons
 - Optional for audio: [PulseAudio for Windows](https://www.freedesktop.org/wiki/Software/PulseAudio/Ports/Windows/)
 
+
+---
+
+> [!IMPORTANT]
+
+> **EN:** To bypass WSLg, you must disable it globally by adding `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
+> 
+> **FR:** Pour contourner WSLg, vous devez le désactiver globalement en ajoutant `guiApplications=false` sous la section `[wsl2]` dans votre fichier `%USERPROFILE%\.wslconfig`.
+
 ---
 
 ## 📜 License / Licence
