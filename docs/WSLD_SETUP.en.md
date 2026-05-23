@@ -149,7 +149,9 @@ cargo install --locked --git https://github.com/nbdd0121/wsld wsldhost
 
 ## ⚙️ 9. Disable WSLg
 
-You must disable WSLg to prevent it from interfering with your custom X11 setup. You can choose one option or **apply both options** to ensure that WSLg is completely blocked from running under any circumstances.
+You must disable WSLg to prevent it from interfering with your custom X11 setup. 
+
+You can choose one option or **apply both options** to ensure that WSLg is completely blocked from running under any circumstances.
 
 ### Option A: Per-distribution (Recommended)
 
