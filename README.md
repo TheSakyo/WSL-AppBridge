@@ -55,8 +55,13 @@ DBus / les apps Wayland-only via un wrapper Linux embarqué.
 >     Ensuite, redémarrez WSL avec la commande `wsl --shutdown` dans PowerShell
 
 ```powershell
-git clone https://github.com/TheSakyo/WSL-AppBridge.git
+# EN: Clone the repository and navigate into it
+# FR: Cloner le dépôt et entrer dans le dossier
+git clone [https://github.com/TheSakyo/WSL-AppBridge.git](https://github.com/TheSakyo/WSL-AppBridge.git)
 cd WSL-AppBridge
+
+# EN: Run the installer script (adjust -Distro parameter as needed)
+# FR: Exécuter le script d'installation (ajuster le paramètre -Distro si nécessaire)
 powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian -Display :0
 ```
 
