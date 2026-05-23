@@ -76,8 +76,9 @@ function New-WABShortcut {
 
     # Constructed command -- pass through ~/.wsl-appbridge/launch.sh which sets
     # DISPLAY, PULSE_SERVER, forces X11 backends, and starts a DBus session.
-    # Fixed: Corrected PowerShell backtick escaping for nested bash quotes to prevent syntax parse errors.
-    $shortcutArgs = "-WindowStyle Hidden -Command ""Start-Process wsl.exe -ArgumentList '-d $Distro --cd ~ bash -c \`""DISPLAY=$Display \$HOME/.wsl-appbridge/launch.sh $execEscaped < /dev/null\`""' -WindowStyle Hidden"""
+    # Fixed: Switched to native call operator '&' with an array of arguments to
+    # completely bypass deep quote nesting and parser token breakdown issues.
+    $shortcutArgs = "-WindowStyle Hidden -Command ""& wsl.exe -d $Distro --cd ~ bash -c 'DISPLAY=$Display `$HOME/.wsl-appbridge/launch.sh $execEscaped < /dev/null'"""
     $iconArg      = if ($IconPath) { "$IconPath,0" }
                     else { (Join-Path $env:WINDIR 'System32\wsl.exe') + ',0' }
 
