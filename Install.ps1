@@ -142,7 +142,7 @@ if (-not $SkipScheduledTasks) {
                        -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
                        -MultipleInstances IgnoreNew
     Register-ScheduledTask -TaskName $syncTaskName -Action $syncAction `
-        -Trigger @($syncTrigger1,$syncTrigger2) -Settings $syncSettings -LogonType S4U -Force | Out-Null
+        -Trigger @($syncTrigger1,$syncTrigger2) -Settings $syncSettings -User $env:USERNAME -LogonType S4U -Force | Out-Null
     Write-Host "  [ok] Scheduled task: $syncTaskName"
 
     if (-not $SkipWatcher) {
@@ -154,7 +154,7 @@ if (-not $SkipScheduledTasks) {
                             -MultipleInstances IgnoreNew `
                             -ExecutionTimeLimit ([TimeSpan]::Zero)
         Register-ScheduledTask -TaskName $watchTaskName -Action $watchAction `
-            -Trigger $watchTrigger -Settings $watchSettings -LogonType S4U -Force | Out-Null
+            -Trigger $watchTrigger -Settings $watchSettings -User $env:USERNAME -LogonType S4U -Force | Out-Null
         Write-Host "  [ok] Scheduled task: $watchTaskName"
     }
 }
