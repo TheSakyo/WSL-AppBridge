@@ -133,6 +133,9 @@ if (-not $SkipScheduledTasks) {
     $syncTaskName  = "WSL-AppBridge-Sync-$Distro"
     $watchTaskName = "WSL-AppBridge-Watcher-$Distro"
 
+    # Define a shared invisible background principal (S4U mode)
+    $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType S4U
+
     # Sync task: at logon AND daily 12:00 (cheap safety net).
     $syncAction   = New-ScheduledTaskAction  -Execute $psHost `
                        -Argument "$commonArgs `"$syncScript`" -ConfigPath `"$settingsPath`""
@@ -142,7 +145,7 @@ if (-not $SkipScheduledTasks) {
                        -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
                        -MultipleInstances IgnoreNew
     Register-ScheduledTask -TaskName $syncTaskName -Action $syncAction `
-        -Trigger @($syncTrigger1,$syncTrigger2) -Settings $syncSettings -User $env:USERNAME -LogonType S4U -Force | Out-Null
+        -Trigger @($syncTrigger1,$syncTrigger2) -Settings $syncSettings -Principal $principal -Force | Out-Null
     Write-Host "  [ok] Scheduled task: $syncTaskName"
 
     if (-not $SkipWatcher) {
@@ -154,7 +157,7 @@ if (-not $SkipScheduledTasks) {
                             -MultipleInstances IgnoreNew `
                             -ExecutionTimeLimit ([TimeSpan]::Zero)
         Register-ScheduledTask -TaskName $watchTaskName -Action $watchAction `
-            -Trigger $watchTrigger -Settings $watchSettings -User $env:USERNAME -LogonType S4U -Force | Out-Null
+            -Trigger $watchTrigger -Settings $watchSettings -Principal $principal -Force | Out-Null
         Write-Host "  [ok] Scheduled task: $watchTaskName"
     }
 }
