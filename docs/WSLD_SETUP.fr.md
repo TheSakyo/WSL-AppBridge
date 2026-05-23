@@ -2,6 +2,8 @@
 
 Ce guide explique comment configurer un environnement X11 contrôlé pour WSL-AppBridge en utilisant WSLD et GWSL à la place de WSLg.
 
+[← Retour au README racine](../README.md) · [English version](WSLD_SETUP.en.md)
+
 ---
 
 ## 🧠 Vue d’ensemble
