@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates and prunes Windows .lnk shortcuts for WSL GUI apps.
 .DESCRIPTION
@@ -66,7 +66,8 @@ function New-WABShortcut {
     $safeName = ConvertTo-WABSafeFileName -Name $App.Name
     $lnkPath  = Join-Path $folderPath "$safeName.lnk"
 
-    $target = Join-Path $env:WINDIR 'System32\wscript.exe'
+    # Switched target to PowerShell to bypass enterprise wscript restrictions
+    $target = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 
     # Escape any literal " inside Exec for the outer Windows-quoted string.
     # Most .desktop Exec values are simple -- this just survives the rare
@@ -76,9 +77,8 @@ function New-WABShortcut {
     # Constructed command -- pass through ~/.wsl-appbridge/launch.sh which sets
     # DISPLAY, PULSE_SERVER, forces X11 backends, and starts a DBus session
     # on demand. The wrapper is deployed once per distro by Install.ps1.
-    $wrapper      = '$HOME/.wsl-appbridge/launch.sh'
-    $wslCmd       = "wsl.exe -d $Distro --cd ~ -- env DISPLAY=$Display $wrapper $execEscaped"
-    $shortcutArgs = "`"$VbsLauncher`" `"$wslCmd`""
+    # Native hidden arguments block window flashes completely without VBS
+    $shortcutArgs = "-WindowStyle Hidden -Command ""Start-Process wsl.exe -ArgumentList '-d $Distro --cd ~ -- env DISPLAY=$Display `$HOME/.wsl-appbridge/launch.sh $execEscaped -nostdin' -WindowStyle Hidden"""
     $iconArg      = if ($IconPath) { "$IconPath,0" }
                     else { (Join-Path $env:WINDIR 'System32\wsl.exe') + ',0' }
 
