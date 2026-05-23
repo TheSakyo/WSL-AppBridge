@@ -60,7 +60,10 @@ foreach ($d in $targets) {
             try {
                 $root = (Get-Content $cfgFile -Raw | ConvertFrom-Json).ShortcutRoot
                 if ($root -and (Test-Path $root)) {
-                    Remove-Item -Path $root -Recurse -Force
+                    # Delete children first, sleep slightly to let explorer release handles, then drop the root folder
+                    Get-ChildItem -Path $root -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+                    Start-Sleep -Milliseconds 100
+                    Remove-Item -Path $root -Recurse -Force -ErrorAction SilentlyContinue
                     Write-Host "  [ok] Removed shortcuts: $root"
                 }
             } catch {}
@@ -85,13 +88,23 @@ if ($All) {
         }
     }
     if (Test-Path $dst) {
-        Remove-Item -Path $dst -Recurse -Force
+        # Remove everything except the running script itself to prevent sharing violations
+        Get-ChildItem -Path $dst -Recurse -ErrorAction SilentlyContinue | 
+            Where-Object { $_.FullName -ne $PSCommandPath } | 
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    
+        # Schedule the removal of the remaining directory and script after this process exits
+        Start-Process cmd.exe -ArgumentList "/c timeout /t 1 /nobreak >nul & rmdir /s /q `"$dst`"" -WindowStyle Hidden
         Write-Host "  [ok] Removed shared payload: $dst"
     }
 } elseif ((Test-Path $instancesRoot) -and
          (-not (Get-ChildItem -Path $instancesRoot -Directory -ErrorAction SilentlyContinue))) {
-    # No instances left -- clean up the empty shared payload too.
-    Remove-Item -Path $dst -Recurse -Force
+    # No instances left -- clean up the empty shared payload too without self-locking
+    Get-ChildItem -Path $dst -Recurse -ErrorAction SilentlyContinue | 
+        Where-Object { $_.FullName -ne $PSCommandPath } | 
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    
+    Start-Process cmd.exe -ArgumentList "/c timeout /t 1 /nobreak >nul & rmdir /s /q `"$dst`"" -WindowStyle Hidden
     Write-Host "No instances remaining. Removed shared payload: $dst"
 }
 
