@@ -149,7 +149,9 @@ cargo install --locked --git https://github.com/nbdd0121/wsld wsldhost
 
 ## ⚙️ 9. Désactiver WSLg
 
-Vous devez désactiver WSLg pour éviter qu'il n'interfère avec votre configuration X11 personnalisée. Vous pouvez choisir une option ou **appliquer les deux options** pour vous assurer que WSLg soit complètement bloqué et ne se lance sous aucun prétexte.
+Vous devez désactiver WSLg pour éviter qu'il n'interfère avec votre configuration X11 personnalisée. 
+
+Vous pouvez choisir une option ou **appliquer les deux options** pour vous assurer que WSLg soit complètement bloqué et ne se lance sous aucun prétexte.
 
 ### Option A : Par distribution
 
