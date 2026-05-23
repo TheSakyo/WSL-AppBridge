@@ -84,7 +84,16 @@ The installer logs the exact command if any of these is missing.
 ## Configuration
 
 > [!IMPORTANT]
-> To bypass WSLg, you must disable it globally by adding `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
+> **How to disable WSLg (Required)**
+> *   **Method 1 (Global):** Add `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
+> *   **Method 2 (Per-distro):** Inside your Linux terminal, edit `/etc/wsl.conf` and add:
+>     ```ini
+>     [gui]
+>     enabled=false
+>     ```
+>     Then restart WSL using `wsl --shutdown` in PowerShell.
+
+</br>
 
 Every parameter accepted by `Install.ps1`:
 
