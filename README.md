@@ -36,9 +36,23 @@ DBus / les apps Wayland-only via un wrapper Linux embarqué.
 ## ⚡ Quick start / Démarrage rapide
 
 > [!IMPORTANT]
-> **EN:** To bypass WSLg, you must disable it globally by adding `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
+> **EN: How to disable WSLg (Required)**
+> *   **Method 1 (Global):** Add `guiApplications=false` under the `[wsl2]` section in your `%USERPROFILE%\.wslconfig` file.
+> *   **Method 2 (Per-distro):** Inside your Linux terminal, edit `/etc/wsl.conf` and add:
+>     ```ini
+>     [gui]
+>     enabled=false
+>     ```
+>     Then restart WSL using `wsl --shutdown` in PowerShell.
 >
-> **FR:** Pour contourner WSLg, vous devez le désactiver globalement en ajoutant `guiApplications=false` sous la section `[wsl2]` dans votre fichier `%USERPROFILE%\.wslconfig`.
+> **FR: Comment désactiver WSLg (Requis)**
+> *   **Méthode 1 (Globale) :** Ajoutez `guiApplications=false` sous la section `[wsl2]` dans votre fichier `%USERPROFILE%\.wslconfig`.
+> *   **Méthode 2 (Par distro) :** Dans votre terminal Linux, modifiez le fichier `/etc/wsl.conf` et ajoutez :
+>     ```ini
+>     [gui]
+>     enabled=false
+>     ```
+>     Ensuite, redémarrez WSL avec la commande `wsl --shutdown` dans PowerShell
 
 ```powershell
 git clone https://github.com/TheSakyo/WSL-AppBridge.git
