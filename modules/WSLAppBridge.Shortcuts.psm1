@@ -69,7 +69,7 @@ function New-WABShortcut {
     # Switched target to PowerShell to bypass enterprise wscript restrictions
     $target = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 
-# Escape any literal " inside Exec for the outer Windows-quoted string.
+    # Escape any literal " inside Exec for the outer Windows-quoted string.
     # Most .desktop Exec values are simple -- this just survives the rare
     # `vlc "my file.mp4"` case.
     $execEscaped = ($App.Exec) -replace '"', '""'
