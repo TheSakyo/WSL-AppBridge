@@ -149,14 +149,30 @@ cargo install --locked --git https://github.com/nbdd0121/wsld wsldhost
 
 ## ⚙️ 9. Désactiver WSLg
 
+Vous devez désactiver WSLg pour éviter qu'il n'interfère avec votre configuration X11 personnalisée. Vous pouvez choisir une option ou **appliquer les deux options** pour vous assurer que WSLg soit complètement bloqué et ne se lance sous aucun prétexte.
+
+### Option A : Par distribution
+
 ```bash
 sudo nano /etc/wsl.conf
 ```
-
-```ini
+```ini, TOML
 [gui]
 enabled=false
 ```
+
+### Option B : Globalement (Toutes les distributions)
+
+Modifiez le fichier de configuration de votre profil Windows (%USERPROFILE%\.wslconfig) et ajoutez ce qui suit :
+
+```ini, TOML
+[wsl2]
+guiApplications=false
+```
+
+### Appliquer les modifications
+
+Une fois la configuration terminée, redémarrez complètement WSL depuis Windows PowerShell pour appliquer les changements :
 
 ```powershell
 wsl --shutdown
