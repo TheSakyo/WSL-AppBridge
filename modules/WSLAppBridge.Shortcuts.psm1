@@ -69,16 +69,16 @@ function New-WABShortcut {
     # Switched target to PowerShell to bypass enterprise wscript restrictions
     $target = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 
-    # Escape any literal " inside Exec for the outer Windows-quoted string.
+# Escape any literal " inside Exec for the outer Windows-quoted string.
     # Most .desktop Exec values are simple -- this just survives the rare
     # `vlc "my file.mp4"` case.
     $execEscaped = ($App.Exec) -replace '"', '""'
 
     # Constructed command -- pass through ~/.wsl-appbridge/launch.sh which sets
-    # DISPLAY, PULSE_SERVER, forces X11 backends, and starts a DBus session
-    # on demand. The wrapper is deployed once per distro by Install.ps1.
-    # Native hidden arguments block window flashes completely without VBS
-    $shortcutArgs = "-WindowStyle Hidden -Command ""Start-Process wsl.exe -ArgumentList '-d $Distro --cd ~ -- env DISPLAY=$Display `$HOME/.wsl-appbridge/launch.sh $execEscaped -nostdin' -WindowStyle Hidden"""
+    # DISPLAY, PULSE_SERVER, forces X11 backends, and starts a DBus session.
+    # Fixed: Replaced '-nostdin' with 'bash -c' and '< /dev/null' redirect to
+    # prevent apps like Thunar from crashing due to unknown argument flags.
+    $shortcutArgs = "-WindowStyle Hidden -Command ""Start-Process wsl.exe -ArgumentList '-d $Distro --cd ~ bash -c \"\"DISPLAY=$Display \$HOME/.wsl-appbridge/launch.sh $execEscaped < /dev/null\"\"' -WindowStyle Hidden"""
     $iconArg      = if ($IconPath) { "$IconPath,0" }
                     else { (Join-Path $env:WINDIR 'System32\wsl.exe') + ',0' }
 
