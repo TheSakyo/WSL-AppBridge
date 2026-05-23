@@ -84,7 +84,16 @@ L'installeur loggue la commande exacte si un de ces paquets manque.
 ## Configuration
 
 > [!IMPORTANT]
-> Pour contourner WSLg, vous devez le désactiver globalement en ajoutant `guiApplications=false` sous la section `[wsl2]` dans votre fichier `%USERPROFILE%\.wslconfig`.
+> **Comment désactiver WSLg (Requis)**
+> *   **Méthode 1 (Globale) :** Ajoutez `guiApplications=false` sous la section `[wsl2]` dans votre fichier `%USERPROFILE%\.wslconfig`.
+> *   **Méthode 2 (Par distro) :** Dans votre terminal Linux, modifiez le fichier `/etc/wsl.conf` et ajoutez :
+>     ```ini
+>     [gui]
+>     enabled=false
+>     ```
+>     Ensuite, redémarrez WSL avec la commande `wsl --shutdown` dans PowerShell
+
+</br>
 
 Tous les paramètres acceptés par `Install.ps1` :
 
