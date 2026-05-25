@@ -122,8 +122,7 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Debian
 powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Ubuntu
 
 # Custom location
-powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Fedora `
-    -ShortcutRoot "D:\WSL\Shortcuts\Fedora"
+powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Distro Fedora -ShortcutRoot "D:\WSL\Shortcuts\Fedora"
 ```
 
 Resulting tasks: `WSL-AppBridge-Sync-Debian`, `WSL-AppBridge-Sync-Ubuntu`,
