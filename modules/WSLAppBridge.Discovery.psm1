@@ -12,12 +12,12 @@
 # ----------------------------- internals -----------------------------------
 # freedesktop field codes that must be stripped from Exec.
 $script:FieldCodeRegex = '(?<!%)%[fFuUdDnNickvm]'
-$script:UncPrefix      = $null   # cached after first call
+$script:UncPrefix = $null   # cached after first call
 
 function Get-WABUncPrefix {
     param([Parameter(Mandatory)][string]$Distro)
     if ($script:UncPrefix) { return $script:UncPrefix }
-    foreach ($p in '\\wsl.localhost\','\\wsl$\') {
+    foreach ($p in '\\wsl.localhost\', '\\wsl$\') {
         if (Test-Path -LiteralPath "$p$Distro\") {
             $script:UncPrefix = $p
             return $p
@@ -34,7 +34,7 @@ function Convert-WABWslPathToUnc {
         [Parameter(Mandatory)][string]$LinuxPath
     )
     $prefix = Get-WABUncPrefix -Distro $Distro
-    $rel    = $LinuxPath -replace '/', '\'
+    $rel = $LinuxPath -replace '/', '\'
     return "$prefix$Distro$rel"
 }
 
@@ -52,13 +52,14 @@ function ConvertFrom-WABDesktopFile {
     if (-not (Test-Path -LiteralPath $Path)) { return $null }
     try {
         $lines = Get-Content -LiteralPath $Path -Encoding UTF8 -ErrorAction Stop
-    } catch {
+    }
+    catch {
         Write-WABDebug "Read failure on $Path : $($_.Exception.Message)"
         return $null
     }
 
     $inEntry = $false
-    $kv      = @{}
+    $kv = @{}
     foreach ($raw in $lines) {
         $line = $raw.Trim()
         if (-not $line -or $line.StartsWith('#')) { continue }
@@ -90,7 +91,7 @@ function Format-WABExec {
 
 # ----------------------------- public API ----------------------------------
 function Get-WABDesktopApps {
-<#
+    <#
 .SYNOPSIS
     Returns the curated list of GUI apps from a WSL distribution.
 .OUTPUTS
@@ -116,7 +117,7 @@ function Get-WABDesktopApps {
         "$wslHome/.local/share/applications"
     )
 
-    $apps    = New-Object System.Collections.Generic.List[object]
+    $apps = New-Object System.Collections.Generic.List[object]
     $seenIds = New-Object System.Collections.Generic.HashSet[string]
 
     foreach ($lDir in $linuxDirs) {
@@ -127,7 +128,7 @@ function Get-WABDesktopApps {
         }
         Write-WABDebug "Scanning $lDir"
         $files = Get-ChildItem -LiteralPath $uncDir -Filter *.desktop -File `
-                    -ErrorAction SilentlyContinue
+            -ErrorAction SilentlyContinue
         foreach ($f in $files) {
             $kv = ConvertFrom-WABDesktopFile -Path $f.FullName
             if (-not $kv) { continue }
@@ -135,8 +136,8 @@ function Get-WABDesktopApps {
             # Per freedesktop spec -- silently skip non-apps and hidden entries.
             if ($kv['Type'] -and $kv['Type'] -ne 'Application') { continue }
             if ($kv['NoDisplay'] -eq 'true') { continue }
-            if ($kv['Hidden']    -eq 'true') { continue }
-            if ($kv['Terminal']  -eq 'true') { continue }   # explicit requirement
+            if ($kv['Hidden'] -eq 'true') { continue }
+            if ($kv['Terminal'] -eq 'true') { continue }   # explicit requirement
 
             $name = $kv['Name']; if (-not $name) { continue }
             $exec = Format-WABExec $kv['Exec']
@@ -152,16 +153,16 @@ function Get-WABDesktopApps {
             }
 
             $apps.Add([pscustomobject]@{
-                Id             = $id
-                Name           = $name
-                Exec           = $exec
-                IconRef        = $kv['Icon']
-                Categories     = $cats
-                StartupWMClass = $kv['StartupWMClass']
-                Comment        = $kv['Comment']
-                DesktopFile    = $f.FullName
-                LinuxPath      = "$lDir/$($f.Name)"
-            })
+                    Id             = $id
+                    Name           = $name
+                    Exec           = $exec
+                    IconRef        = $kv['Icon']
+                    Categories     = $cats
+                    StartupWMClass = $kv['StartupWMClass']
+                    Comment        = $kv['Comment']
+                    DesktopFile    = $f.FullName
+                    LinuxPath      = "$lDir/$($f.Name)"
+                })
         }
     }
     Write-WABInfo "Discovered $($apps.Count) desktop application(s)."
@@ -169,7 +170,7 @@ function Get-WABDesktopApps {
 }
 
 function Get-WABDesktopFilesHash {
-<#
+    <#
 .SYNOPSIS
     Cheap MD5 fingerprint of all relevant .desktop files (name+size+mtime).
 .DESCRIPTION
@@ -192,22 +193,23 @@ function Get-WABDesktopFilesHash {
     $sb = [System.Text.StringBuilder]::new()
     foreach ($d in $dirs) {
         # FIX: Ensure paths are purged from trailing C-style null characters before Test-Path
-        $dClean = $d.Replace([char]0, "").Trim()
+        $dClean = $d.Replace("`0", "").Trim()
         if (-not (Test-Path -LiteralPath $dClean)) { continue }
         Get-ChildItem -LiteralPath $dClean -Filter *.desktop -File -ErrorAction SilentlyContinue |
-            Sort-Object Name | ForEach-Object {
-                [void]$sb.Append($_.Name);                  [void]$sb.Append('|')
-                [void]$sb.Append($_.Length);                [void]$sb.Append('|')
-                [void]$sb.Append($_.LastWriteTimeUtc.Ticks); [void]$sb.Append(';')
-            }
+        Sort-Object Name | ForEach-Object {
+            [void]$sb.Append($_.Name); [void]$sb.Append('|')
+            [void]$sb.Append($_.Length); [void]$sb.Append('|')
+            [void]$sb.Append($_.LastWriteTimeUtc.Ticks); [void]$sb.Append(';')
+        }
     }
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($sb.ToString())
-    $md5   = [System.Security.Cryptography.MD5]::Create()
-    return ([BitConverter]::ToString($md5.ComputeHash($bytes)) -replace '-','').ToLower()
+    $md5 = [System.Security.Cryptography.MD5]::Create()
+    return ([BitConverter]::ToString($md5.ComputeHash($bytes)) -replace '-', '').ToLower()
 }
 
 # Wrapped so dot-sourcing (outside a module context) doesn't error.
 try {
     Export-ModuleMember -Function Get-WABDesktopApps, Get-WABDesktopFilesHash,
-        Convert-WABWslPathToUnc, Get-WABWslHome, Get-WABUncPrefix
-} catch { }
+    Convert-WABWslPathToUnc, Get-WABWslHome, Get-WABUncPrefix
+}
+catch { }
