@@ -112,6 +112,7 @@ Write-Host "  [ok] Config: $settingsPath"
 # 3. Resolve a PowerShell host (prefer pwsh, fall back to Windows PowerShell).
 # ---------------------------------------------------------------------------
 $pwshCmd = Get-Command pwsh -ErrorAction SilentlyContinue
+$rawHost = if ($pwshCmd) { $pwshCmd.Source }
 else { "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" }
 
 # WRAPPER CONHOST : Forces Windows to use the legacy invisible console subsystem instead 
@@ -128,7 +129,10 @@ $psHost = "$env:WINDIR\System32\conhost.exe"
 if (-not $SkipScheduledTasks) {
     $syncScript = Join-Path $dst 'Sync-WSLApps.ps1'
     $watchScript = Join-Path $dst 'Watch-WSLApps.ps1'
-    $commonArgs  = "`"$rawHost`" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File"
+
+    # The action now starts conhost.exe, which instantly swallows the window, 
+    # and passes the real PowerShell host as the first parameter.
+    $commonArgs = "`"$rawHost`" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File"
 
     $syncTaskName = "WSL-AppBridge-Sync-$Distro"
     $watchTaskName = "WSL-AppBridge-Watcher-$Distro"
