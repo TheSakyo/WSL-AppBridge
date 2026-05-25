@@ -117,7 +117,7 @@ else { "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" }
 
 # WRAPPER CONHOST : Forces Windows to use the legacy invisible console subsystem instead 
 # of spawning new tabs/windows in modern Windows Terminal at startup.
-$psHost = "$env:WINDIR\System32\conhost.exe"
+$conhost = "$env:WINDIR\System32\conhost.exe"
 
 # ---------------------------------------------------------------------------
 # 4. Linux-side setup (wrapper + deps) is handled by Sync's first-run path.
@@ -144,7 +144,7 @@ if (-not $SkipScheduledTasks) {
     $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
     
     # Sync task: at logon AND daily 12:00 (cheap safety net).
-    $syncAction = New-ScheduledTaskAction  -Execute $psHost `
+    $syncAction = New-ScheduledTaskAction  -Execute $conhost `
         -Argument "$commonArgs `"$syncScript`" -ConfigPath `"$settingsPath`""
     $syncTrigger1 = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
     $syncTrigger2 = New-ScheduledTaskTrigger -Daily   -At 12:00pm
@@ -156,7 +156,7 @@ if (-not $SkipScheduledTasks) {
     Write-Host "  [ok] Scheduled task: $syncTaskName"
 
     if (-not $SkipWatcher) {
-        $watchAction = New-ScheduledTaskAction  -Execute $psHost `
+        $watchAction = New-ScheduledTaskAction  -Execute $conhost `
             -Argument "$commonArgs `"$watchScript`" -ConfigPath `"$settingsPath`""
         $watchTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
         $watchSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable `
@@ -173,7 +173,7 @@ if (-not $SkipScheduledTasks) {
 # 6. Initial sync.
 # ---------------------------------------------------------------------------
 Write-Host 'Running initial sync...' -ForegroundColor Cyan
-& $psHost -NoProfile -ExecutionPolicy Bypass `
+& $rawHost -NoProfile -ExecutionPolicy Bypass `
     -File (Join-Path $dst 'Sync-WSLApps.ps1') -ConfigPath $settingsPath
 
 Write-Host "`nInstalled ($Distro). Shortcuts: $ShortcutRoot" -ForegroundColor Green
