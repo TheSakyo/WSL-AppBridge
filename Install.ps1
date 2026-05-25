@@ -46,8 +46,8 @@
 #>
 [CmdletBinding()]
 param(
-    [string] $Distro       = 'Debian',
-    [string] $Display      = ':0',
+    [string] $Distro = 'Debian',
+    [string] $Display = ':0',
     [string] $ShortcutRoot,
     [switch] $SkipWatcher,
     [switch] $SkipScheduledTasks
@@ -70,16 +70,16 @@ Write-Host "Installing WSL-AppBridge ($Distro) -> $dst" -ForegroundColor Cyan
 # ---------------------------------------------------------------------------
 # 1. Copy shared payload (idempotent -- overwrites in place).
 # ---------------------------------------------------------------------------
-if (-not (Test-Path $dst))         { New-Item -ItemType Directory -Force -Path $dst         | Out-Null }
+if (-not (Test-Path $dst)) { New-Item -ItemType Directory -Force -Path $dst         | Out-Null }
 if (-not (Test-Path $instanceDir)) { New-Item -ItemType Directory -Force -Path $instanceDir | Out-Null }
 
-foreach ($item in 'Sync-WSLApps.ps1','Watch-WSLApps.ps1','Run-WSL.vbs','Uninstall.ps1','README.md') {
+foreach ($item in 'Sync-WSLApps.ps1', 'Watch-WSLApps.ps1', 'Run-WSL.vbs', 'Uninstall.ps1', 'README.md') {
     $p = Join-Path $src $item
     if (Test-Path $p) { Copy-Item $p (Join-Path $dst $item) -Force }
 }
 
 # Recreate modules + assets cleanly to avoid stale files between upgrades.
-foreach ($folder in 'modules','assets') {
+foreach ($folder in 'modules', 'assets') {
     $dstFolder = Join-Path $dst $folder
     if (Test-Path $dstFolder) { Remove-Item $dstFolder -Recurse -Force }
     if (Test-Path (Join-Path $src $folder)) {
@@ -91,7 +91,7 @@ foreach ($folder in 'modules','assets') {
 # Required so pwsh actually exposes module function exports even though
 # -ExecutionPolicy Bypass is set on the parent process.
 Get-ChildItem -Path $dst -Recurse -File -ErrorAction SilentlyContinue |
-    Unblock-File -ErrorAction SilentlyContinue
+Unblock-File -ErrorAction SilentlyContinue
 
 # ---------------------------------------------------------------------------
 # 2. Write per-instance config.
@@ -112,50 +112,50 @@ Write-Host "  [ok] Config: $settingsPath"
 # 3. Resolve a PowerShell host (prefer pwsh, fall back to Windows PowerShell).
 # ---------------------------------------------------------------------------
 $pwshCmd = Get-Command pwsh -ErrorAction SilentlyContinue
-$psHost  = if ($pwshCmd) { $pwshCmd.Source }
-           else          { "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" }
+$psHost = if ($pwshCmd) { $pwshCmd.Source }
+else { "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" }
 
 # ---------------------------------------------------------------------------
 # 4. Linux-side setup (wrapper + deps) is handled by Sync's first-run path.
-#    We could load WslSetup here, but spawning the sync subprocess below
-#    already gets us into a clean module-loading context that we know works
-#    -- no need to fight Import-Module scoping quirks in this parent script.
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 # 5. Scheduled tasks (suffixed by distro so multiple installs coexist).
 # ---------------------------------------------------------------------------
 if (-not $SkipScheduledTasks) {
-    $syncScript  = Join-Path $dst 'Sync-WSLApps.ps1'
+    $syncScript = Join-Path $dst 'Sync-WSLApps.ps1'
     $watchScript = Join-Path $dst 'Watch-WSLApps.ps1'
-    $commonArgs  = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File'
+    $commonArgs = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File'
 
-    $syncTaskName  = "WSL-AppBridge-Sync-$Distro"
+    $syncTaskName = "WSL-AppBridge-Sync-$Distro"
     $watchTaskName = "WSL-AppBridge-Watcher-$Distro"
 
-    # Define a shared invisible background principal (S4U mode)
-    $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType S4U
+    # FIX: Use Interactive LogonType instead of S4U. 
+    # This associates the running context completely with your active desktop session,
+    # allows proper interaction with WSL, and guarantees window suppression when combined
+    # with the hidden execution settings.
+    $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
 
     # Sync task: at logon AND daily 12:00 (cheap safety net).
-    $syncAction   = New-ScheduledTaskAction  -Execute $psHost `
-                       -Argument "$commonArgs `"$syncScript`" -ConfigPath `"$settingsPath`""
+    $syncAction = New-ScheduledTaskAction  -Execute $psHost `
+        -Argument "$commonArgs `"$syncScript`" -ConfigPath `"$settingsPath`""
     $syncTrigger1 = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
     $syncTrigger2 = New-ScheduledTaskTrigger -Daily   -At 12:00pm
     $syncSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable `
-                       -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
-                       -MultipleInstances IgnoreNew
+        -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+        -MultipleInstances IgnoreNew
     Register-ScheduledTask -TaskName $syncTaskName -Action $syncAction `
-        -Trigger @($syncTrigger1,$syncTrigger2) -Settings $syncSettings -Principal $principal -Force | Out-Null
+        -Trigger @($syncTrigger1, $syncTrigger2) -Settings $syncSettings -Principal $principal -Force | Out-Null
     Write-Host "  [ok] Scheduled task: $syncTaskName"
 
     if (-not $SkipWatcher) {
-        $watchAction   = New-ScheduledTaskAction  -Execute $psHost `
-                            -Argument "$commonArgs `"$watchScript`" -ConfigPath `"$settingsPath`""
-        $watchTrigger  = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+        $watchAction = New-ScheduledTaskAction  -Execute $psHost `
+            -Argument "$commonArgs `"$watchScript`" -ConfigPath `"$settingsPath`""
+        $watchTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
         $watchSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable `
-                            -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
-                            -MultipleInstances IgnoreNew `
-                            -ExecutionTimeLimit ([TimeSpan]::Zero)
+            -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+            -MultipleInstances IgnoreNew `
+            -ExecutionTimeLimit ([TimeSpan]::Zero)
         Register-ScheduledTask -TaskName $watchTaskName -Action $watchAction `
             -Trigger $watchTrigger -Settings $watchSettings -Principal $principal -Force | Out-Null
         Write-Host "  [ok] Scheduled task: $watchTaskName"
