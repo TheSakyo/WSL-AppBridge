@@ -166,26 +166,25 @@ If no PulseAudio server is reachable, apps stay silent but do not error.
                             ┌──────────────────────────┐
                             │  Install.ps1 (one-shot)  │
                             └──────────┬───────────────┘
-                                       │ deploys
+                                       │ Deploys (via $rawHost = pwsh/powershell)
                                        ▼
 %LOCALAPPDATA%\WSL-AppBridge\          │
-├── Sync-WSLApps.ps1   ◄── Scheduled Task: WSL-AppBridge-Sync-<Distro>
-├── Watch-WSLApps.ps1  ◄── Scheduled Task: WSL-AppBridge-Watcher-<Distro>
+├── Sync-WSLApps.ps1   ◄── Scheduled Task: conhost.exe -> $rawHost -> Script (Invisible)
+├── Watch-WSLApps.ps1  ◄── Scheduled Task: conhost.exe -> $rawHost -> Script (Invisible)
 ├── modules\           ◄── WSLAppBridge.{Logger,Discovery,Icons,Shortcuts,
 │                          Categories,WslSetup}.psm1
-├── assets\launch.sh   ◄── deployed into the distro at install + on each
-│                          sync (self-heal)
+├── assets\launch.sh   ◄── Deployed to distro + self-heal (via Sync-WSLApps)
 └── instances\<Distro>\settings.json, state.json, sync.log, icons\
 
-In the WSL distro:
+Inside the WSL distro:
 ~/.wsl-appbridge/launch.sh
-    ├── sets DISPLAY, PULSE_SERVER
-    ├── forces GDK_BACKEND=x11, QT_QPA_PLATFORM=xcb (Wayland-only bypass)
-    └── starts dbus-run-session if no bus is active
+    ├── Sets DISPLAY, PULSE_SERVER
+    ├── Forces GDK_BACKEND=x11, QT_QPA_PLATFORM=xcb (Wayland-only bypass)
+    └── Starts dbus-run-session if no active bus
 
-Shortcut .lnk target:
-    wscript.exe Run-WSL.vbs "wsl.exe -d <Distro> --cd ~ -- env DISPLAY=:0
-                            $HOME/.wsl-appbridge/launch.sh <exec>"
+Target of the .lnk shortcut (Dynamic Fallback):
+    1. If WScript allowed: wscript.exe Run-WSL.vbs "<cmd>"
+    2. If Fallback required: powershell.exe -WindowStyle Hidden -Command "<cmd>"
 ```
 
 Key design choices:
