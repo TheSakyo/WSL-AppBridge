@@ -24,19 +24,17 @@ param(
 
 # ----------------------------- bootstrap -----------------------------------
 $ErrorActionPreference = 'Stop'
-$Root    = $PSScriptRoot
+$Root = $PSScriptRoot
 $Modules = Join-Path $Root 'modules'
 
-# Load modules in dependency order. PowerShell detects the .psm1 extension on
-# dot-source and silently uses module-loading semantics, which keeps the
-# functions inside the module scope. We bypass that by reading the file
-# content into a scriptblock and dot-sourcing *that* -- the engine treats it
-# as inline script, so functions land in this script's scope as intended.
-foreach ($m in 'Logger','Categories','Discovery','WslSetup','Icons','Shortcuts') {
+# Load modules in dependency order using native dot-sourcing.
+# This ensures functions are evaluated sequentially and can safely see each other 
+# across files while remaining within the orchestrator script scope.
+foreach ($m in 'Logger', 'Categories', 'Discovery', 'WslSetup', 'Icons', 'Shortcuts') {
     $path = Join-Path $Modules "WSLAppBridge.$m.psm1"
     if (-not (Test-Path $path)) { throw "Module file missing: $path" }
     try { Unblock-File -Path $path -ErrorAction SilentlyContinue } catch {}
-    . ([scriptblock]::Create((Get-Content -Raw -LiteralPath $path)))
+    . $path
 }
 
 if (-not (Get-Command Initialize-WABLogger -ErrorAction SilentlyContinue)) {
@@ -47,7 +45,7 @@ if (-not (Get-Command Initialize-WABLogger -ErrorAction SilentlyContinue)) {
 $defaultCfg = [pscustomobject]@{
     Distro       = 'Debian'
     Display      = ':0'
-    ShortcutRoot = Join-Path $env:USERPROFILE 'Desktop\WSL Apps'
+    ShortcutRoot = $null  # Built dynamically below to include the targeted Distro name
     IconCache    = Join-Path $env:LOCALAPPDATA 'WSL-AppBridge\icons'
     StateFile    = Join-Path $env:LOCALAPPDATA 'WSL-AppBridge\state.json'
     LogFile      = Join-Path $env:LOCALAPPDATA 'WSL-AppBridge\sync.log'
@@ -61,9 +59,15 @@ if (Test-Path $cfgFile) {
         foreach ($prop in $user.PSObject.Properties) {
             $cfg.$($prop.Name) = $prop.Value
         }
-    } catch {
+    }
+    catch {
         Write-Warning "Cannot read '$cfgFile': $($_.Exception.Message). Using defaults."
     }
+}
+
+# FIX: Dynamically assign the shortcut directory to the Windows Start Menu, isolation by Distro
+if ([string]::IsNullOrEmpty($cfg.ShortcutRoot)) {
+    $cfg.ShortcutRoot = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\WSL Apps\$($cfg.Distro)"
 }
 
 Initialize-WABLogger -Path $cfg.LogFile -Level $cfg.LogLevel
@@ -83,7 +87,15 @@ try {
     $wrapperLinux = Get-WABWrapperLinuxPath -Distro $cfg.Distro
     if ($wrapperLinux) {
         $wrapperUnc = Convert-WABWslPathToUnc -Distro $cfg.Distro -LinuxPath $wrapperLinux
-        if (-not (Test-Path -LiteralPath $wrapperUnc)) {
+        
+        # FIX: Sanitize the UNC path string by stripping embedded null characters ([char]0)
+        # that occur when WSL outputs raw C-style byte strings during execution.
+        if ($null -ne $wrapperUnc) {
+            $wrapperUnc = $wrapperUnc.Replace([char]0, "").Trim()
+        }
+
+        # Safely evaluate path existence only if the string is valid and populated
+        if (-not [string]::IsNullOrEmpty($wrapperUnc) -and -not (Test-Path -LiteralPath $wrapperUnc)) {
             $assetSrc = Join-Path $Root 'assets\launch.sh'
             if (Test-Path $assetSrc) {
                 Write-WABWarn "Wrapper missing in distro -- redeploying."
@@ -91,7 +103,8 @@ try {
             }
         }
     }
-} catch {
+}
+catch {
     Write-WABWarn "Wrapper self-heal skipped: $($_.Exception.Message)"
 }
 
@@ -129,18 +142,19 @@ if (-not $apps -or $apps.Count -eq 0) {
 if (-not (Test-Path $cfg.ShortcutRoot)) {
     New-Item -ItemType Directory -Force -Path $cfg.ShortcutRoot | Out-Null
 }
-$kept    = New-Object System.Collections.Generic.List[string]
+$kept = New-Object System.Collections.Generic.List[string]
 $changed = 0
 foreach ($app in $apps) {
     try {
         $icon = Get-WABIconForApp -Distro $cfg.Distro -AppId $app.Id `
-                    -IconRef $app.IconRef -CacheDir $cfg.IconCache
-        $res  = New-WABShortcut -RootDir $cfg.ShortcutRoot -App $app `
-                    -Distro $cfg.Distro -VbsLauncher $vbs `
-                    -IconPath $icon -Display $cfg.Display
+            -IconRef $app.IconRef -CacheDir $cfg.IconCache
+        $res = New-WABShortcut -RootDir $cfg.ShortcutRoot -App $app `
+            -Distro $cfg.Distro -VbsLauncher $vbs `
+            -IconPath $icon -Display $cfg.Display
         $kept.Add($res.Path)
         if ($res.Changed) { $changed++ }
-    } catch {
+    }
+    catch {
         Write-WABError "Failed for '$($app.Name)': $($_.Exception.Message)"
     }
 }
