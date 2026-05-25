@@ -112,8 +112,11 @@ Write-Host "  [ok] Config: $settingsPath"
 # 3. Resolve a PowerShell host (prefer pwsh, fall back to Windows PowerShell).
 # ---------------------------------------------------------------------------
 $pwshCmd = Get-Command pwsh -ErrorAction SilentlyContinue
-$psHost = if ($pwshCmd) { $pwshCmd.Source }
 else { "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" }
+
+# WRAPPER CONHOST : Forces Windows to use the legacy invisible console subsystem instead 
+# of spawning new tabs/windows in modern Windows Terminal at startup.
+$psHost = "$env:WINDIR\System32\conhost.exe"
 
 # ---------------------------------------------------------------------------
 # 4. Linux-side setup (wrapper + deps) is handled by Sync's first-run path.
@@ -125,7 +128,7 @@ else { "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" }
 if (-not $SkipScheduledTasks) {
     $syncScript = Join-Path $dst 'Sync-WSLApps.ps1'
     $watchScript = Join-Path $dst 'Watch-WSLApps.ps1'
-    $commonArgs = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File'
+    $commonArgs  = "`"$rawHost`" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File"
 
     $syncTaskName = "WSL-AppBridge-Sync-$Distro"
     $watchTaskName = "WSL-AppBridge-Watcher-$Distro"
@@ -135,7 +138,7 @@ if (-not $SkipScheduledTasks) {
     # allows proper interaction with WSL, and guarantees window suppression when combined
     # with the hidden execution settings.
     $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
-
+    
     # Sync task: at logon AND daily 12:00 (cheap safety net).
     $syncAction = New-ScheduledTaskAction  -Execute $psHost `
         -Argument "$commonArgs `"$syncScript`" -ConfigPath `"$settingsPath`""
