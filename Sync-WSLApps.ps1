@@ -27,14 +27,14 @@ $ErrorActionPreference = 'Stop'
 $Root = $PSScriptRoot
 $Modules = Join-Path $Root 'modules'
 
-# Load modules in dependency order using native dot-sourcing.
-# This ensures functions are evaluated sequentially and can safely see each other 
-# across files while remaining within the orchestrator script scope.
+# Load modules sequentially using Import-Module.
+# This respects Export-ModuleMember statements and exposes functions globally
+# across scripts while handling .psm1 strict encapsulation correctly.
 foreach ($m in 'Logger', 'Categories', 'Discovery', 'WslSetup', 'Icons', 'Shortcuts') {
     $path = Join-Path $Modules "WSLAppBridge.$m.psm1"
     if (-not (Test-Path $path)) { throw "Module file missing: $path" }
     try { Unblock-File -Path $path -ErrorAction SilentlyContinue } catch {}
-    Import-Module -LiteralPath $path -Force -Scope Global
+    Import-Module -Name $path -Force -Scope Global
 }
 
 if (-not (Get-Command Initialize-WABLogger -ErrorAction SilentlyContinue)) {
