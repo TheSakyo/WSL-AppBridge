@@ -215,10 +215,7 @@ WSL-AppBridge/
 │   ├── WSLAppBridge.Discovery.psm1
 │   ├── WSLAppBridge.WslSetup.psm1
 │   ├── WSLAppBridge.Icons.psm1
-│   └── WSLAppBridge.Shortcuts.psm1
-└── docs\
-    ├── README.en.md             Documentation anglaise
-    └── README.fr.md             Ce fichier
+└── └── WSLAppBridge.Shortcuts.psm1
 ```
 
 ---
