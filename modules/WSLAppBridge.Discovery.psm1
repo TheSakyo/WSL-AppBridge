@@ -107,7 +107,7 @@ function Get-WABDesktopApps {
     }
     
     # FIX: Sanitize the home path string by stripping embedded null characters
-    $wslHome = $wslHome.Replace([char]0, "").Trim()
+    $wslHome = ($wslHome -replace "`0", "").Trim()
 
     # First-match-wins precedence: system → vendor → user.
     $linuxDirs = @(
@@ -182,7 +182,7 @@ function Get-WABDesktopFilesHash {
     if (-not $wslHome) { return $null }
     
     # FIX: Sanitize the home path string by stripping embedded null characters
-    $wslHome = $wslHome.Replace([char]0, "").Trim()
+    $wslHome = ($wslHome -replace "`0", "").Trim()
 
     $dirs = @(
         Convert-WABWslPathToUnc -Distro $Distro -LinuxPath '/usr/share/applications'
