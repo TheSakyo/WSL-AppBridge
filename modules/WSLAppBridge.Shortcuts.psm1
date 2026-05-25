@@ -42,7 +42,7 @@ function Get-WABShortcutSignature {
 
 # ----------------------------- public API ----------------------------------
 function New-WABShortcut {
-<#
+    <#
 .SYNOPSIS
     Creates or updates a .lnk for one WSL app with an automatic engine fallback.
 .OUTPUTS
@@ -70,16 +70,9 @@ function New-WABShortcut {
     $execEscaped = ($App.Exec) -replace '"', '""'
 
     # --- AUTOMATIC LAUNCHER ENGINE FALLBACK DETECTION ---
-    # Check if wscript.exe or the VBS infrastructure is restricted/missing on this machine
-    $usePowerShellFallback = $false
-    try {
-        if (-not (Test-Path -LiteralPath $VbsLauncher)) {
-            $usePowerShellFallback = $true
-        }
-    }
-    catch {
-        $usePowerShellFallback = $true
-    }
+    # HARD FORCED FALLBACK: Since Windows Script Host throws permission errors (800A0046) at runtime,
+    # we force the PowerShell engine fallback directly to bypass system VBS restrictions.
+    $usePowerShellFallback = $true
 
     # --- ARGUMENTS & TARGET CONFIGURATION ---
     if ($usePowerShellFallback) {
