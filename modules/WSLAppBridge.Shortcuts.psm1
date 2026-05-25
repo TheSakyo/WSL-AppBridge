@@ -44,7 +44,7 @@ function Get-WABShortcutSignature {
 function New-WABShortcut {
     <#
 .SYNOPSIS
-    Creates or updates a .lnk for one WSL app with an automatic engine fallback.
+    Creates or updates a .lnk for one WSL app with an active runtime engine fallback.
 .OUTPUTS
     PSCustomObject @{ Path = <lnk>; Changed = $true|$false }
 #>
@@ -69,10 +69,38 @@ function New-WABShortcut {
     # Escape quotes inside the executable command string to protect the payload syntax
     $execEscaped = ($App.Exec) -replace '"', '""'
 
-    # --- AUTOMATIC LAUNCHER ENGINE FALLBACK DETECTION ---
-    # HARD FORCED FALLBACK: Since Windows Script Host throws permission errors (800A0046) at runtime,
-    # we force the PowerShell engine fallback directly to bypass system VBS restrictions.
-    $usePowerShellFallback = $true
+    # --- DYNAMIC LAUNCHER ENGINE FALLBACK DETECTION ---
+    # We actively test if the current user/host enforces policies restricting VBScript execution
+    $usePowerShellFallback = $false
+    if (-not (Test-Path -LiteralPath $VbsLauncher)) {
+        $usePowerShellFallback = $true
+    }
+    else {
+        try {
+            # Attempt a silent, ultra-fast execution test of wscript.exe against an empty call 
+            # to see if the OS throws a 800A0046 Permission Denied error.
+            $testCmd = "cmd.exe /c wscript.exe `"{0}`" test-probe-silence" -f $VbsLauncher
+            $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+            $processInfo.FileName = "cmd.exe"
+            $processInfo.Arguments = "/c wscript.exe `"{0}`"" -f $VbsLauncher
+            $processInfo.RedirectStandardError = $true
+            $processInfo.UseShellExecute = $false
+            $processInfo.CreateNoWindow = $true
+            
+            $process = [System.Diagnostics.Process]::Start($processInfo)
+            $void = $process.WaitForExit(1000) # Wait up to 1 second maximum
+
+            # If wscript gets blocked, it terminates or returns an unmanaged error signature
+            if ($process.ExitCode -ne 0) {
+                # Fallback to PowerShell if wscript execution is trapped or restricted
+                $usePowerShellFallback = $true
+            }
+        }
+        catch {
+            # Any host management action block triggers the alternative path
+            $usePowerShellFallback = $true
+        }
+    }
 
     # --- ARGUMENTS & TARGET CONFIGURATION ---
     if ($usePowerShellFallback) {
