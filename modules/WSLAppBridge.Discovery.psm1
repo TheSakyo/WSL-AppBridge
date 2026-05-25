@@ -105,6 +105,9 @@ function Get-WABDesktopApps {
         Write-WABError "Cannot resolve WSL home for distro '$Distro'. Is the VM running?"
         return @()
     }
+    
+    # FIX: Sanitize the home path string by stripping embedded null characters
+    $wslHome = $wslHome.Replace([char]0, "").Trim()
 
     # First-match-wins precedence: system → vendor → user.
     $linuxDirs = @(
@@ -177,6 +180,10 @@ function Get-WABDesktopFilesHash {
 
     $wslHome = Get-WABWslHome -Distro $Distro
     if (-not $wslHome) { return $null }
+    
+    # FIX: Sanitize the home path string by stripping embedded null characters
+    $wslHome = $wslHome.Replace([char]0, "").Trim()
+
     $dirs = @(
         Convert-WABWslPathToUnc -Distro $Distro -LinuxPath '/usr/share/applications'
         Convert-WABWslPathToUnc -Distro $Distro -LinuxPath '/usr/local/share/applications'
@@ -184,11 +191,13 @@ function Get-WABDesktopFilesHash {
     )
     $sb = [System.Text.StringBuilder]::new()
     foreach ($d in $dirs) {
-        if (-not (Test-Path -LiteralPath $d)) { continue }
-        Get-ChildItem -LiteralPath $d -Filter *.desktop -File -ErrorAction SilentlyContinue |
+        # FIX: Ensure paths are purged from trailing C-style null characters before Test-Path
+        $dClean = $d.Replace([char]0, "").Trim()
+        if (-not (Test-Path -LiteralPath $dClean)) { continue }
+        Get-ChildItem -LiteralPath $dClean -Filter *.desktop -File -ErrorAction SilentlyContinue |
             Sort-Object Name | ForEach-Object {
-                [void]$sb.Append($_.Name);                [void]$sb.Append('|')
-                [void]$sb.Append($_.Length);              [void]$sb.Append('|')
+                [void]$sb.Append($_.Name);                  [void]$sb.Append('|')
+                [void]$sb.Append($_.Length);                [void]$sb.Append('|')
                 [void]$sb.Append($_.LastWriteTimeUtc.Ticks); [void]$sb.Append(';')
             }
     }
