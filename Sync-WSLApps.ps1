@@ -34,7 +34,9 @@ foreach ($m in 'Logger', 'Categories', 'Discovery', 'WslSetup', 'Icons', 'Shortc
     $path = Join-Path $Modules "WSLAppBridge.$m.psm1"
     if (-not (Test-Path $path)) { throw "Module file missing: $path" }
     try { Unblock-File -Path $path -ErrorAction SilentlyContinue } catch {}
-    Import-Module -Name $path -Force -Scope Global
+    
+    # SAFE TEXT EVALUATION: Bypasses Windows file association traps completely
+    . ([scriptblock]::Create((Get-Content -Raw -LiteralPath $path)))
 }
 
 if (-not (Get-Command Initialize-WABLogger -ErrorAction SilentlyContinue)) {
