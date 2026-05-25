@@ -44,7 +44,7 @@ function Get-WABShortcutSignature {
 function New-WABShortcut {
 <#
 .SYNOPSIS
-    Creates or updates a .lnk for one WSL app. Skip-rewrite when unchanged.
+    Creates or updates a .lnk for one WSL app with an automatic engine fallback.
 .OUTPUTS
     PSCustomObject @{ Path = <lnk>; Changed = $true|$false }
 #>
@@ -58,33 +58,49 @@ function New-WABShortcut {
         [string] $Display = ':0'
     )
 
-    $folder     = Get-WABCategoryFolder -Categories $App.Categories
+    $folder = Get-WABCategoryFolder -Categories $App.Categories
     $folderPath = Join-Path $RootDir $folder
     if (-not (Test-Path $folderPath)) {
         New-Item -ItemType Directory -Force -Path $folderPath | Out-Null
     }
     $safeName = ConvertTo-WABSafeFileName -Name $App.Name
-    $lnkPath  = Join-Path $folderPath "$safeName.lnk"
+    $lnkPath = Join-Path $folderPath "$safeName.lnk"
 
-    # Switched target to PowerShell to bypass enterprise wscript restrictions
-    $target = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
-
-# Escape any literal " inside Exec for the outer Windows-quoted string.
-    # Most .desktop Exec values are simple -- this just survives the rare
-    # `vlc "my file.mp4"` case.
+    # Escape quotes inside the executable command string to protect the payload syntax
     $execEscaped = ($App.Exec) -replace '"', '""'
 
-    # Constructed command -- pass through ~/.wsl-appbridge/launch.sh which sets
-    # DISPLAY, PULSE_SERVER, forces X11 backends, and starts a DBus session.
-    # Fixed: Switched to native call operator '&' with an array of arguments to
-    # completely bypass deep quote nesting and parser token breakdown issues.
-    $shortcutArgs = "-WindowStyle Hidden -Command ""& wsl.exe -d $Distro --cd ~ bash -c 'DISPLAY=$Display `$HOME/.wsl-appbridge/launch.sh $execEscaped < /dev/null'"""
-    $iconArg      = if ($IconPath) { "$IconPath,0" }
-                    else { (Join-Path $env:WINDIR 'System32\wsl.exe') + ',0' }
+    # --- AUTOMATIC LAUNCHER ENGINE FALLBACK DETECTION ---
+    # Check if wscript.exe or the VBS infrastructure is restricted/missing on this machine
+    $usePowerShellFallback = $false
+    try {
+        if (-not (Test-Path -LiteralPath $VbsLauncher)) {
+            $usePowerShellFallback = $true
+        }
+    }
+    catch {
+        $usePowerShellFallback = $true
+    }
 
+    # --- ARGUMENTS & TARGET CONFIGURATION ---
+    if ($usePowerShellFallback) {
+        # FALLBACK METHOD: Native PowerShell launcher to bypass corporate/system VBS/wscript restrictions
+        $target = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
+        $shortcutArgs = "-WindowStyle Hidden -Command ""& wsl.exe -d $Distro --cd ~ bash -c 'DISPLAY=$Display `$HOME/.wsl-appbridge/launch.sh $execEscaped < /dev/null'"""
+    }
+    else {
+        # DEFAULT METHOD: Stealth execution using wscript.exe + Run-WSL.vbs wrapper
+        $target = Join-Path $env:WINDIR 'System32\wscript.exe'
+        $wslCmd = 'wsl.exe -d {0} --cd ~ bash -c "DISPLAY={1} \$HOME/.wsl-appbridge/launch.sh {2} < /dev/null"' -f $Distro, $Display, $execEscaped
+        $shortcutArgs = "`"{0}`" `"{1}`"" -f $VbsLauncher, $wslCmd
+    }
+
+    $iconArg = if ($IconPath) { "$IconPath,0" }
+    else { (Join-Path $env:WINDIR 'System32\wsl.exe') + ',0' }
+
+    # Compute a unique fingerprint signature to prevent unneeded rewrites
     $signature = Get-WABShortcutSignature -Target $target -Arguments $shortcutArgs -Icon $iconArg
 
-    # Idempotency: if existing .lnk already encodes this signature → skip.
+    # Idempotency: skip rewrite if existing shortcut configuration matches the new signature
     if (Test-Path -LiteralPath $lnkPath) {
         try {
             $existing = (Get-WABShellCom).CreateShortcut($lnkPath)
@@ -92,22 +108,24 @@ function New-WABShortcut {
                 Write-WABDebug "Up to date: $($App.Name)"
                 return [pscustomobject]@{ Path = $lnkPath; Changed = $false }
             }
-        } catch {}
+        }
+        catch {}
     }
 
     $desc = if ($App.Comment) { "$($App.Comment) [sig:$signature]" }
-            else              { "WSL app: $($App.Name) [sig:$signature]" }
+    else { "WSL app: $($App.Name) [sig:$signature]" }
 
+    # Generate and persist the Windows Shell Link (.lnk) file
     $sc = (Get-WABShellCom).CreateShortcut($lnkPath)
-    $sc.TargetPath       = $target
-    $sc.Arguments        = $shortcutArgs
+    $sc.TargetPath = $target
+    $sc.Arguments = $shortcutArgs
     $sc.WorkingDirectory = $env:USERPROFILE
-    $sc.IconLocation     = $iconArg
-    $sc.Description      = $desc
-    $sc.WindowStyle      = 7   # minimised (defence in depth; VBS already hides)
+    $sc.IconLocation = $iconArg
+    $sc.Description = $desc
+    $sc.WindowStyle = 7   # Run minimized as a multi-layered defense to hide transient flashing windows
     $sc.Save()
 
-    Write-WABInfo "Updated shortcut: $folder\$safeName.lnk"
+    Write-WABInfo "Updated shortcut: $folder\$safeName.lnk (Fallback Mode: $usePowerShellFallback)"
     return [pscustomobject]@{ Path = $lnkPath; Changed = $true }
 }
 
