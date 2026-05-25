@@ -167,15 +167,14 @@ ne crashent pas.
                             ┌──────────────────────────┐
                             │  Install.ps1 (one-shot)  │
                             └──────────┬───────────────┘
-                                       │ déploie
+                                       │ Déploie (via $rawHost = pwsh/powershell)
                                        ▼
 %LOCALAPPDATA%\WSL-AppBridge\          │
-├── Sync-WSLApps.ps1   ◄── Scheduled Task: WSL-AppBridge-Sync-<Distro>
-├── Watch-WSLApps.ps1  ◄── Scheduled Task: WSL-AppBridge-Watcher-<Distro>
+├── Sync-WSLApps.ps1   ◄── Scheduled Task: conhost.exe -> $rawHost -> Script (Invisible)
+├── Watch-WSLApps.ps1  ◄── Scheduled Task: conhost.exe -> $rawHost -> Script (Invisible)
 ├── modules\           ◄── WSLAppBridge.{Logger,Discovery,Icons,Shortcuts,
 │                          Categories,WslSetup}.psm1
-├── assets\launch.sh   ◄── déployé dans la distro à l'install + à chaque
-│                          sync (self-heal)
+├── assets\launch.sh   ◄── déployé dans la distro + self-heal (via Sync-WSLApps)
 └── instances\<Distro>\settings.json, state.json, sync.log, icons\
 
 Dans la distro WSL :
@@ -184,9 +183,9 @@ Dans la distro WSL :
     ├── force GDK_BACKEND=x11, QT_QPA_PLATFORM=xcb (bypass Wayland-only)
     └── démarre dbus-run-session si aucun bus actif
 
-Cible du raccourci .lnk :
-    wscript.exe Run-WSL.vbs "wsl.exe -d <Distro> --cd ~ -- env DISPLAY=:0
-                            $HOME/.wsl-appbridge/launch.sh <exec>"
+Cible du raccourci .lnk (Fallback dynamique) :
+    1. Si WScript autorisé : wscript.exe Run-WSL.vbs "<cmd>"
+    2. Si Fallback requis : powershell.exe -WindowStyle Hidden -Command "<cmd>"
 ```
 
 Choix de design clés :
