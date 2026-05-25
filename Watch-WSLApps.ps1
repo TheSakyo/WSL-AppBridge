@@ -24,7 +24,9 @@ foreach ($m in 'Logger','Discovery') {
     $path = Join-Path $Modules "WSLAppBridge.$m.psm1"
     if (-not (Test-Path $path)) { throw "Module file missing: $path" }
     try { Unblock-File -Path $path -ErrorAction SilentlyContinue } catch {}
-    . $path
+    
+    # Use the same robust loading method as Sync-WSLApps.ps1
+    . ([scriptblock]::Create((Get-Content -Raw -LiteralPath $path)))
 }
 if (-not (Get-Command Initialize-WABLogger -ErrorAction SilentlyContinue)) {
     throw "Logger functions still not in scope."
