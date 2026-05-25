@@ -90,7 +90,7 @@ try {
     if ($wrapperLinux) {
         $wrapperUnc = Convert-WABWslPathToUnc -Distro $cfg.Distro -LinuxPath $wrapperLinux
         
-        # FIX: Sanitize the UNC path string by stripping embedded null characters ([char]0)
+        # FIX: Sanitize the UNC path string by stripping embedded null characters (`0)
         # that occur when WSL outputs raw C-style byte strings during execution.
         if ($null -ne $wrapperUnc) {
             $wrapperUnc = $wrapperUnc.Replace("`0", "").Trim()
