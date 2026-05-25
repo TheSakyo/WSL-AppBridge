@@ -91,7 +91,7 @@ try {
         # FIX: Sanitize the UNC path string by stripping embedded null characters ([char]0)
         # that occur when WSL outputs raw C-style byte strings during execution.
         if ($null -ne $wrapperUnc) {
-            $wrapperUnc = $wrapperUnc.Replace([char]0, "").Trim()
+            $wrapperUnc = $wrapperUnc.Replace("`0", "").Trim()
         }
 
         # Safely evaluate path existence only if the string is valid and populated
