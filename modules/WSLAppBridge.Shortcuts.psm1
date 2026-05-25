@@ -74,8 +74,7 @@ function New-WABShortcut {
     $usePowerShellFallback = $false
     if (-not (Test-Path -LiteralPath $VbsLauncher)) {
         $usePowerShellFallback = $true
-    }
-    else {
+    } else {
         try {
             # Attempt a silent, ultra-fast execution test of wscript.exe against an empty call 
             # to see if the OS throws a 800A0046 Permission Denied error.
